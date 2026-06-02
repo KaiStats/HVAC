@@ -44,8 +44,8 @@ export async function ingestDocument({
         org_id: orgId,
         document_id: documentId,
         content: c.content,
-        section: c.section,
-        page: c.page,
+        section_title: c.section,
+        page_number: c.page,
         chunk_index: c.chunk_index,
         // pgvector accepts the JSON-array string form "[0.1,0.2,...]".
         embedding: JSON.stringify(vectors[j]),

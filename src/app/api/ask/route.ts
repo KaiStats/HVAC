@@ -20,7 +20,9 @@ const MATCH_COUNT = 8; // pgvector cosine top-K
 const RERANK_TO = 4; // narrow to the best few before answering
 const MIN_SIMILARITY = 0.25;
 
-// Persist the turn (audit evidence). Never let a save failure break the stream.
+// Persist the turn as a conversation with a user + assistant message (the
+// assistant message carries the citation JSON — audit evidence). Never let a
+// save failure break the stream.
 async function saveTurn(
   supabase: SupabaseClient,
   session: SessionContext,
@@ -28,14 +30,26 @@ async function saveTurn(
   answer: AskAnswer,
 ) {
   try {
-    await supabase.from("messages").insert({
-      org_id: session.orgId,
-      user_id: session.userId,
-      question,
-      answer: answer.answer,
-      citations: answer.citations,
-      refused: answer.refused,
-    });
+    const { data: convo } = await supabase
+      .from("conversations")
+      .insert({
+        org_id: session.orgId,
+        user_id: session.userId,
+        title: question.slice(0, 80),
+      })
+      .select("id")
+      .single();
+    if (!convo) return;
+
+    await supabase.from("messages").insert([
+      { conversation_id: convo.id, role: "user", content: question },
+      {
+        conversation_id: convo.id,
+        role: "assistant",
+        content: answer.answer,
+        citations: answer.citations,
+      },
+    ]);
   } catch {
     // Non-fatal: the worker still gets their answer.
   }

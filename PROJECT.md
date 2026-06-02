@@ -122,17 +122,29 @@ non-PDF formats.
 Practice mode & simulations (Claude Sonnet), grading, manager audit-readiness
 dashboard, analytics, notifications, billing.
 
-## Data model (Phase 1)
+## Data model (canonical)
 
-- `orgs(id, name, created_at)`
-- `profiles(id = auth.users.id, org_id, email, full_name, role, created_at)`
-- `documents(id, org_id, title, storage_path, status, page_count, uploaded_by, error, created_at)`
-  - `status ∈ {processing, ready, error}`
-- `document_chunks(id, org_id, document_id, content, section, page, chunk_index, embedding vector(1024), created_at)`
-- `messages(id, org_id, user_id, question, answer, citations jsonb, refused, created_at)`
-  — every Q&A turn is saved with its citation JSON as audit evidence.
+Phase 1 tables (in `supabase/migrations/0001_init.sql`):
 
-Every table carries `org_id` and is protected by RLS keyed to the caller's org.
+- `organizations(id, name, vertical, created_at)`
+- `profiles(id = auth.users.id, org_id, full_name, role['admin'|'manager'|'worker'], job_title, created_at)`
+- `documents(id, org_id, title, file_path, file_type, status['processing'|'ready'|'error'], version, uploaded_by→profiles, created_at)`
+  - plus additive operational columns `page_count`, `error` that power Phase 1
+    UX (showing page count and the failure reason).
+- `document_chunks(id, document_id, org_id, content, section_title, page_number, chunk_index, embedding vector(1024), created_at)`
+- `conversations(id, org_id, user_id→profiles, title, created_at)`
+- `messages(id, conversation_id→conversations, role['user'|'assistant'], content, citations jsonb, created_at)`
+  — every Q&A turn is saved (user + assistant message); the assistant message
+  carries the citation JSON as audit evidence.
+
+Deferred to their phases ("ship the wedge first", added when built):
+`scenarios`, `scenario_sessions` (Phase 2); `training_modules`,
+`module_completions` (Phase 3); `document_versions` (Phase 5).
+
+Every org-scoped table is protected by RLS keyed to the caller's org via
+`current_org_id()` — the safe form of
+`org_id = (select org_id from profiles where id = auth.uid())`.
+`messages` is scoped through its conversation's org.
 
 ## RAG pipeline (the engine)
 

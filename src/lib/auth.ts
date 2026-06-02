@@ -20,13 +20,13 @@ export async function getSessionContext(): Promise<SessionContext | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("org_id, orgs(name)")
+    .select("org_id, organizations(name)")
     .eq("id", user.id)
     .single();
 
   if (!profile?.org_id) return null;
 
-  const org = profile.orgs as unknown as { name: string } | null;
+  const org = profile.organizations as unknown as { name: string } | null;
 
   return {
     userId: user.id,

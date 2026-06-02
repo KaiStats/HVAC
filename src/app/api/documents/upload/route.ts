@@ -44,7 +44,7 @@ export async function POST(request: Request) {
     .insert({
       org_id: session.orgId,
       title,
-      storage_path: "pending",
+      file_type: "pdf",
       status: "processing",
       uploaded_by: session.userId,
     })
@@ -58,13 +58,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const storagePath = `${session.orgId}/${doc.id}.pdf`;
+  const filePath = `${session.orgId}/${doc.id}.pdf`;
   const bytes = new Uint8Array(await file.arrayBuffer());
   const admin = createAdminClient();
 
   const { error: uploadError } = await admin.storage
     .from("documents")
-    .upload(storagePath, bytes, {
+    .upload(filePath, bytes, {
       contentType: "application/pdf",
       upsert: true,
     });
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
 
   await admin
     .from("documents")
-    .update({ storage_path: storagePath })
+    .update({ file_path: filePath })
     .eq("id", doc.id);
 
   try {

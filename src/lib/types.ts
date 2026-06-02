@@ -4,8 +4,10 @@ export interface DocumentRow {
   id: string;
   org_id: string;
   title: string;
-  storage_path: string;
+  file_path: string | null;
+  file_type: string | null;
   status: DocumentStatus;
+  version: number;
   page_count: number | null;
   error: string | null;
   uploaded_by: string | null;
