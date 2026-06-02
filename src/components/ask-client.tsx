@@ -1,9 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Send, Quote, FileText, Info } from "lucide-react";
+import { useRef, useState } from "react";
+import {
+  Loader2,
+  Send,
+  Quote,
+  FileText,
+  Info,
+  Mic,
+  Square,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 
 import type { AskAnswer, Citation } from "@/lib/types";
+import { useDictation } from "@/hooks/use-dictation";
+import { useSpeak } from "@/hooks/use-speak";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,10 +94,29 @@ export function AskClient() {
   const [result, setResult] = useState<AskAnswer | null>(null);
   const [asked, setAsked] = useState<string | null>(null);
 
+  // Voice: dictate the question, and read the answer back hands-free.
+  const baseRef = useRef("");
+  const dictation = useDictation((text) => {
+    const base = baseRef.current;
+    setQuestion(base ? `${base} ${text}` : text);
+  });
+  const speech = useSpeak();
+
+  function toggleMic() {
+    if (dictation.listening) {
+      dictation.stop();
+      return;
+    }
+    baseRef.current = question.trim();
+    dictation.start();
+  }
+
   async function ask(e: React.FormEvent) {
     e.preventDefault();
     const q = question.trim();
     if (q.length < 3) return;
+    dictation.stop();
+    speech.stop();
     setLoading(true);
     setError(null);
     setResult(null);
@@ -117,14 +149,51 @@ export function AskClient() {
       </div>
 
       <form onSubmit={ask} className="space-y-3">
-        <Textarea
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="e.g. What PPE do I need to operate the forklift?"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) void ask(e);
-          }}
-        />
+        <div className="relative">
+          <Textarea
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="e.g. What PPE do I need to operate the forklift?"
+            className={cn(
+              "pr-16",
+              dictation.listening && "ring-2 ring-primary",
+            )}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) void ask(e);
+            }}
+          />
+          {dictation.supported && (
+            <button
+              type="button"
+              onClick={toggleMic}
+              aria-label={dictation.listening ? "Stop voice" : "Ask by voice"}
+              className={cn(
+                "absolute bottom-3 right-3 flex size-12 items-center justify-center rounded-full transition-colors",
+                dictation.listening
+                  ? "animate-pulse bg-destructive text-destructive-foreground"
+                  : "bg-primary text-primary-foreground",
+              )}
+            >
+              {dictation.listening ? (
+                <Square className="size-5" />
+              ) : (
+                <Mic className="size-6" />
+              )}
+            </button>
+          )}
+        </div>
+
+        {dictation.listening && (
+          <p className="text-center text-sm font-semibold text-primary">
+            Listening… speak your question, then tap stop.
+          </p>
+        )}
+        {dictation.error && (
+          <p className="rounded-md bg-destructive/10 p-3 text-sm font-medium text-destructive">
+            {dictation.error}
+          </p>
+        )}
+
         <Button
           type="submit"
           size="lg"
@@ -164,8 +233,23 @@ export function AskClient() {
           ) : (
             <>
               <Card className="border-2 border-primary/20">
-                <CardContent className="p-5">
+                <CardContent className="space-y-3 p-5">
                   <AnswerBody text={result.answer} />
+                  {speech.supported && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => speech.toggle(result.answer)}
+                    >
+                      {speech.speaking ? (
+                        <VolumeX className="size-5" />
+                      ) : (
+                        <Volume2 className="size-5" />
+                      )}
+                      {speech.speaking ? "Stop" : "Listen"}
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
 

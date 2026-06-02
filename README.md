@@ -81,6 +81,9 @@ Other scripts: `npm run build`, `npm run start`, `npm run typecheck`,
   Haiku answers using only those sources. Every claim carries a `[n]` citation
   that maps to document + section + page. If nothing can be cited, the
   assistant says it couldn't find the answer — it never shows uncited claims.
+- **Voice** → tap the mic to dictate a question, and tap **Listen** to hear the
+  answer read aloud (Web Speech API; hidden where the browser doesn't support
+  it). No extra keys or services required.
 
 ## Phase 1 acceptance test
 

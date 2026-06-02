@@ -5,6 +5,25 @@
 > shipped in `compliance-copilot.zip`, which was not retrievable in the build
 > environment. Treat this file as canonical until told otherwise.)
 
+## North star
+
+> "Your compliance manual is useless if nobody reads it. This is the AI that
+> gives the right answer in seconds — and proves your team is actually ready."
+
+## The 5 pains → features map
+
+| # | The pain (field research) | The cure (feature) | Phase |
+| - | --- | --- | --- |
+| 1 | No just-in-time help — nobody reads the 200-page manual mid-task | AI Policy Q&A over their docs, cited, voice-enabled | **1 (wedge)** |
+| 2 | "Cram and forget" — passes the quiz, can't handle a real incident | Inspection Simulator + Incident Response Trainer (active practice) | 2 |
+| 3 | "Checkbox / CYA" — generic, irrelevant | Role-specific micro-learning + personalized refreshers | 3 |
+| 4 | Audit stress — gaps surface too late, no visibility | Audit Prep Assistant + Knowledge-Gap Dashboard | 4 |
+| 5 | Update burden — regs change, content rots | Versioned knowledge base + update alerts | 5 |
+
+Ordering is deliberate: Pain #1 is the most relatable and ownable — the free
+"Manual-to-AI" pilot that closes the client. Win on Phase 1, expand into the
+rest.
+
 ## What we are building
 
 Compliance Copilot is a **multi-tenant SaaS web app**. It ingests a company's
@@ -55,11 +74,14 @@ In scope:
   Claude Haiku → **every claim cited (document + section + page)**.
 - If the assistant cannot cite a source, it says it doesn't know. No
   uncited answers are ever shown.
+- **Voice-enabled**: workers can ask by voice (tap-to-dictate) and have the
+  cited answer read back to them hands-free. Voice degrades gracefully where
+  the browser doesn't support it.
 - Mobile-first UI: login, dashboard, documents/upload, ask.
 
 Out of scope (do NOT build yet): practice/simulation, grading, manager
 dashboards, analytics, billing, team management UI, multi-file batch flows,
-non-PDF formats, voice input.
+non-PDF formats.
 
 #### Phase 1 acceptance criteria
 
@@ -70,6 +92,8 @@ non-PDF formats, voice input.
 - [ ] Clicking a citation reveals the exact source snippet.
 - [ ] When the docs don't contain the answer, the assistant clearly says so
       and shows **no** uncited claims.
+- [ ] A worker can ask by voice and have the answer read aloud (where the
+      browser supports it); the feature is hidden cleanly where it isn't.
 - [ ] Two orgs cannot see each other's documents, chunks, or answers
       (verified by RLS — a direct query as Org A returns zero Org B rows).
 - [ ] Works well on a phone screen (375px wide), large tap targets, plain words.
