@@ -1,7 +1,7 @@
 import { requireSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import {
-  HistoryClient,
+  HistoryList,
   type HistoryConversation,
 } from "@/components/history-client";
 
@@ -14,7 +14,7 @@ export default async function HistoryPage() {
   // RLS scopes to the org; we additionally filter to this user's conversations.
   const { data } = await supabase
     .from("conversations")
-    .select("id, title, created_at, messages(role, content, citations, created_at)")
+    .select("id, title, created_at, messages(role, content, created_at)")
     .eq("user_id", session.userId)
     .order("created_at", { ascending: false })
     .order("created_at", { referencedTable: "messages", ascending: true })
@@ -22,5 +22,5 @@ export default async function HistoryPage() {
 
   const conversations = (data ?? []) as unknown as HistoryConversation[];
 
-  return <HistoryClient conversations={conversations} />;
+  return <HistoryList conversations={conversations} />;
 }

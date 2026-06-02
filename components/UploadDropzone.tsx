@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const ACCEPT = ".pdf,.docx,.txt";
 
-export function DocumentUploader() {
+export function UploadDropzone() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -27,7 +27,7 @@ export function DocumentUploader() {
     try {
       const body = new FormData();
       body.append("file", file);
-      const res = await fetch("/api/documents/upload", {
+      const res = await fetch("/api/ingest", {
         method: "POST",
         body,
       });

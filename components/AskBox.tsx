@@ -2,26 +2,16 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import {
-  Send,
-  Info,
-  Mic,
-  Square,
-  Volume2,
-  VolumeX,
-  ChevronDown,
-  BookOpen,
-  Sparkles,
-} from "lucide-react";
+import { Send, Info, BookOpen, Sparkles } from "lucide-react";
 
 import type { AskAnswer } from "@/lib/types";
 import { useDictation } from "@/hooks/use-dictation";
-import { useSpeak } from "@/hooks/use-speak";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { AnswerBody, CitationList } from "@/components/answer-view";
+import { VoiceButton } from "@/components/VoiceButton";
+import { AnswerCard, AnswerText } from "@/components/AnswerCard";
 
 type Phase = "idle" | "reading" | "streaming" | "done" | "error";
 
@@ -32,7 +22,7 @@ const DEFAULT_EXAMPLES = [
   "When do I need a hot work permit?",
 ];
 
-export function AskClient({
+export function AskBox({
   hasDocuments,
   examples = DEFAULT_EXAMPLES,
 }: {
@@ -45,14 +35,12 @@ export function AskClient({
   const [result, setResult] = useState<AskAnswer | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [asked, setAsked] = useState<string | null>(null);
-  const [sourcesOpen, setSourcesOpen] = useState(false);
 
   const baseRef = useRef("");
   const dictation = useDictation((text) => {
     const base = baseRef.current;
     setQuestion(base ? `${base} ${text}` : text);
   });
-  const speech = useSpeak();
 
   const loading = phase === "reading" || phase === "streaming";
 
@@ -67,11 +55,9 @@ export function AskClient({
 
   async function runAsk(q: string) {
     dictation.stop();
-    speech.stop();
     setError(null);
     setResult(null);
     setStreamText("");
-    setSourcesOpen(false);
     setAsked(q);
     setPhase("reading");
 
@@ -91,7 +77,6 @@ export function AskClient({
       const decoder = new TextDecoder();
       let buffer = "";
 
-      // Stream answer token-by-token for an instant feel.
       for (;;) {
         const { value, done } = await reader.read();
         if (done) break;
@@ -125,11 +110,6 @@ export function AskClient({
     void runAsk(q);
   }
 
-  function askExample(q: string) {
-    setQuestion(q);
-    void runAsk(q);
-  }
-
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="space-y-1">
@@ -156,23 +136,11 @@ export function AskClient({
             }}
           />
           {dictation.supported && (
-            <button
-              type="button"
-              onClick={toggleMic}
-              aria-label={dictation.listening ? "Stop voice" : "Ask by voice"}
-              className={cn(
-                "absolute bottom-3 right-3 flex size-14 items-center justify-center rounded-full transition-colors",
-                dictation.listening
-                  ? "animate-pulse bg-destructive text-destructive-foreground"
-                  : "bg-primary text-primary-foreground",
-              )}
-            >
-              {dictation.listening ? (
-                <Square className="size-6" />
-              ) : (
-                <Mic className="size-7" />
-              )}
-            </button>
+            <VoiceButton
+              listening={dictation.listening}
+              onToggle={toggleMic}
+              className="absolute bottom-3 right-3"
+            />
           )}
         </div>
 
@@ -221,7 +189,7 @@ export function AskClient({
               <button
                 key={ex}
                 type="button"
-                onClick={() => askExample(ex)}
+                onClick={() => runAsk(ex)}
                 className="flex min-h-14 items-center rounded-xl border bg-card px-4 text-left text-lg font-medium transition-colors hover:border-primary/50"
               >
                 {ex}
@@ -243,10 +211,7 @@ export function AskClient({
           <CardContent className="flex items-center gap-3 p-5">
             <BookOpen className="size-6 animate-pulse text-primary" />
             <p className="text-lg font-semibold text-primary">
-              Reading your manuals
-              <span className="inline-flex w-6 justify-start">
-                <span className="animate-pulse">…</span>
-              </span>
+              Reading your manuals…
             </p>
           </CardContent>
         </Card>
@@ -256,12 +221,12 @@ export function AskClient({
       {phase === "streaming" && (
         <Card className="border-2 border-primary/20">
           <CardContent className="p-5">
-            <AnswerBody text={streamText} />
+            <AnswerText text={streamText} />
           </CardContent>
         </Card>
       )}
 
-      {/* Final answer: answer first, detail (sources) second & collapsible. */}
+      {/* Final answer. */}
       {phase === "done" && result && (
         <div className="space-y-4">
           {asked && (
@@ -269,7 +234,6 @@ export function AskClient({
               You asked: {asked}
             </p>
           )}
-
           {result.refused ? (
             <Card className="border-amber-200 bg-amber-50">
               <CardContent className="flex gap-3 p-5 text-amber-900">
@@ -278,48 +242,7 @@ export function AskClient({
               </CardContent>
             </Card>
           ) : (
-            <>
-              <Card className="border-2 border-primary/20">
-                <CardContent className="space-y-4 p-5">
-                  <AnswerBody text={result.answer} />
-                  {speech.supported && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => speech.toggle(result.answer)}
-                    >
-                      {speech.speaking ? (
-                        <VolumeX className="size-6" />
-                      ) : (
-                        <Volume2 className="size-6" />
-                      )}
-                      {speech.speaking ? "Stop" : "Listen"}
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setSourcesOpen((o) => !o)}
-                  className="flex min-h-14 w-full items-center justify-between rounded-xl border bg-card px-4 text-lg font-semibold"
-                >
-                  <span>Where this comes from</span>
-                  <ChevronDown
-                    className={cn(
-                      "size-6 transition-transform",
-                      sourcesOpen && "rotate-180",
-                    )}
-                  />
-                </button>
-                {sourcesOpen && (
-                  <div className="mt-3">
-                    <CitationList citations={result.citations} />
-                  </div>
-                )}
-              </div>
-            </>
+            <AnswerCard answer={result.answer} citations={result.citations} />
           )}
         </div>
       )}

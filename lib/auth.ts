@@ -7,6 +7,7 @@ export interface SessionContext {
   email: string | null;
   orgId: string;
   orgName: string;
+  orgVertical: string | null;
 }
 
 // Resolves the current user and their org. Returns null if not authenticated
@@ -20,19 +21,23 @@ export async function getSessionContext(): Promise<SessionContext | null> {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("org_id, organizations(name)")
+    .select("org_id, organizations(name, vertical)")
     .eq("id", user.id)
     .single();
 
   if (!profile?.org_id) return null;
 
-  const org = profile.organizations as unknown as { name: string } | null;
+  const org = profile.organizations as unknown as {
+    name: string;
+    vertical: string | null;
+  } | null;
 
   return {
     userId: user.id,
     email: user.email ?? null,
     orgId: profile.org_id,
     orgName: org?.name ?? "Your workspace",
+    orgVertical: org?.vertical ?? null,
   };
 }
 

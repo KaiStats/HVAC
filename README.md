@@ -18,7 +18,7 @@ every time.**
 ## Product laws (non-negotiable)
 
 1. **Every answer cites its source** (document + section + page). No citation =
-   not shown. Enforced in code (`src/lib/anthropic.ts`).
+   not shown. Enforced in code (`lib/anthropic.ts`).
 2. **A 5th grader can use it.** The home screen is one big "Ask anything" box;
    plain language, ≥48px tap targets, mobile-first. The answer comes first
    (1–3 sentences), with a collapsible "Where this comes from" showing the exact
@@ -32,12 +32,11 @@ every time.**
 ### 1. Supabase project
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. In **SQL Editor**, run the migrations in order:
-   - `supabase/migrations/0001_init.sql`
-   - `supabase/migrations/0002_storage.sql`
-   These create the schema, `pgvector` index, RLS policies, the new-user
-   bootstrap trigger (each signup gets its own org), and the private
-   `documents` storage bucket.
+2. In **SQL Editor**, run, in order:
+   - `db/schema.sql` — tables, `pgvector` index, functions, the new-user
+     bootstrap trigger (each signup gets its own org), `match_chunks`, and the
+     private `documents` storage bucket.
+   - `db/policies.sql` — Row-Level Security on every table + storage policies.
 3. **Auth → URL Configuration:** set **Site URL** to your app origin (e.g.
    `http://localhost:3000`) and add `<origin>/auth/callback` to **Redirect
    URLs**. Sign-in is a passwordless **email magic link**, so make sure the
@@ -93,13 +92,16 @@ Other scripts: `npm run build`, `npm run start`, `npm run typecheck`,
 
 ## Phase 1 acceptance test
 
-1. Create an account → you land in your own workspace (org).
-2. Upload a compliance PDF → it shows **Processing** then **Ready**.
-3. Ask a question answered by the doc → you get an answer with citation chips;
-   tap a chip to reveal the exact source snippet (document, section, page).
+1. Sign in via the emailed **magic link** → you land in your own workspace (org).
+2. Upload a compliance PDF/DOCX (drag-drop) → it shows **Processing** then
+   **Ready** ("✅ Your manual is ready").
+3. Ask a question (typed or by voice) answered by the doc → a streamed answer
+   with citation chips; expand "Where this comes from" for document, page, and
+   section, and the exact words; tap **Listen** to hear it.
 4. Ask something not in the docs → the assistant says it couldn't find it, with
    no uncited claims.
-5. Create a **second** account, upload a different doc, and confirm you cannot
+5. Check **History** → your question + cited answer is saved and reopenable.
+6. Create a **second** account, upload a different doc, and confirm you cannot
    see the first org's documents or get answers from them (RLS isolation).
 
 ## Multi-tenancy & security notes

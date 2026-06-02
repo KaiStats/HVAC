@@ -184,6 +184,85 @@ sources + question) → **stream** Claude Haiku → parse citations and render t
 as tappable "Where this comes from → Manual X, p.42, §3.1" → save the turn to
 `messages` with the citation JSON.
 
+## AI prompts (the secret sauce)
+
+Only **7a** is wired up in Phase 1. 7b–7e are recorded here verbatim as the
+canonical reference and are implemented in their phases.
+
+**Implementation note on 7a:** we follow 7a's rules and refusal text, but use
+inline `[n]` citations (each excerpt is numbered; the server maps `[n]` back to
+the excerpt's exact document/page/section) instead of trusting a model-emitted
+JSON page number. This upholds "never invent a number" more strictly and still
+persists the equivalent citation JSON to `messages.citations`.
+
+### 7a — Policy Q&A system prompt (Haiku) — IMPLEMENTED
+
+```
+You are Compliance Copilot, a safety & compliance assistant for {{org_name}} ({{vertical}}).
+Answer ONLY from the provided manual excerpts. If the answer isn't in them, say:
+"I couldn't find that in your current documents — ask your safety manager," and stop.
+
+Rules:
+- Lead with a 1–3 sentence plain-language answer a new hire would understand. No jargon.
+- Then list the exact steps if the question is procedural.
+- EVERY factual claim must map to a source excerpt. Never invent a regulation, number, or step.
+- Output the answer, then a JSON block of citations:
+  {"citations":[{"document_title":"...","page":N,"section":"..."}]}
+- If excerpts conflict, say so and cite both.
+
+Excerpts:
+{{retrieved_chunks_with_source_tags}}
+
+Question: {{user_question}}
+```
+
+### 7b — Inspection Simulator (Sonnet) — Phase 2
+
+```
+You are running a realistic mock {{vertical}} safety inspection for a worker, based only on the
+company's procedures below. Behave like a tough-but-fair inspector.
+
+- Ask ONE question at a time. Wait for the answer before the next.
+- Cover 5 of the highest-risk topics found in the procedures.
+- After all 5, output JSON ONLY:
+  {"score":0-100,"summary":"...","gaps":[{"topic":"...","missed":"...","correct_procedure":"...","source_page":N}]}
+- Be specific in "correct_procedure" and cite the page so they can verify.
+
+Company procedures:
+{{retrieved_chunks}}
+```
+
+### 7c — Incident Response Trainer (Sonnet) — Phase 2
+
+```
+Present this incident: {{scenario}}.
+Ask the worker what they would do, step by step.
+Then grade their response against the SOP below. Reward correct sequencing and safety priorities.
+Output JSON: {"score":0-100,"what_they_did_well":[...],"what_was_missing":[...],"correct_sequence":[...],"source_pages":[...]}
+
+SOP:
+{{retrieved_chunks}}
+```
+
+### 7d — Micro-learning generator (Sonnet, at module creation) — Phase 3
+
+```
+From the document below, create {{n}} micro-lessons for the role "{{target_role}}".
+Each lesson: one real on-the-job situation as the prompt, a short correct answer, and the source page.
+Output JSON array: [{"prompt":"...","answer":"...","source_page":N}]
+Keep each answer under 40 words. Plain language only.
+```
+
+### 7e — Audit gap synthesis (Sonnet) — Phase 4
+
+```
+Given these team practice results (scores + gaps) and the company's procedures, produce:
+1. A prioritized audit-readiness checklist.
+2. The 3 weakest areas across the team.
+3. Recommended targeted drills per weak area.
+Output as structured JSON. Cite source pages for each checklist item.
+```
+
 ## Retrieval & answer contract
 
 - Retrieve top-K chunks within the caller's org only.
@@ -193,6 +272,42 @@ as tappable "Where this comes from → Manual X, p.42, §3.1" → save the turn 
   facts it can cite, and we refuse to render an answer that lacks citations.
 - If retrieval is empty or the model cannot cite, return the explicit
   "I couldn't find this in your documents" response.
+
+## File / folder structure
+
+```
+/app
+  /(auth)/login             # magic-link sign in
+  /(app)
+    /page.tsx               # HOME = the big Ask box
+    /ask/[conversationId]   # a saved conversation (cited answer)
+    /documents              # upload + status list
+    /history                # your saved questions
+    # /practice (P2) /learn (P3) /dashboard (P4) — added in their phases
+  /auth/callback, /auth/signout   # magic-link code exchange + sign out
+  /api
+    /ingest/route.ts        # POST: store → parse → chunk → embed → store
+    /ask/route.ts           # POST: retrieve → rerank → Claude (stream)
+    # /simulate (P2) — added in Phase 2
+/lib
+  supabase/{client,server,admin,middleware}.ts  # split for the RSC boundary
+  voyage.ts                 # Voyage embeddings + rerank
+  anthropic.ts              # Claude wrapper + prompt 7a + citation enforcement
+  chunk.ts                  # recursive splitter w/ metadata
+  extract.ts, pdf.ts        # text extraction (pdf/docx/txt)
+  ingest.ts, retrieval (match_chunks RPC), auth.ts, env.ts, types.ts
+/components
+  AskBox VoiceButton AnswerCard CitationChip UploadDropzone DocStatusList
+  app-nav app-header history-client  /ui (shadcn primitives)
+/db
+  schema.sql  policies.sql
+PROJECT.md
+```
+
+Note: Supabase clients are split into `lib/supabase/*` (rather than a single
+`lib/supabase.ts`) because the App Router forbids mixing server-only
+(`next/headers`) and browser client code in one module. Retrieval lives in the
+`match_chunks` Postgres function (`db/schema.sql`) called from the ask route.
 
 ## Working agreement
 

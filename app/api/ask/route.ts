@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { embedQuery, rerank } from "@/lib/voyage";
 import {
   REFUSAL_TEXT,
-  SYSTEM_PROMPT,
+  buildSystemPrompt,
   buildUserPrompt,
   finalizeAnswer,
   getQaClient,
@@ -133,7 +133,7 @@ export async function POST(request: Request) {
           model: getQaModel(),
           max_tokens: 700,
           temperature: 0,
-          system: SYSTEM_PROMPT,
+          system: buildSystemPrompt(session.orgName, session.orgVertical),
           messages: [
             { role: "user", content: buildUserPrompt(question, chunks) },
           ],

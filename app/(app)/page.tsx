@@ -1,6 +1,6 @@
 import { requireSession } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { AskClient } from "@/components/ask-client";
+import { AskBox } from "@/components/AskBox";
 
 export const dynamic = "force-dynamic";
 
@@ -13,5 +13,5 @@ export default async function HomePage() {
     .select("id", { count: "exact", head: true })
     .eq("status", "ready");
 
-  return <AskClient hasDocuments={(count ?? 0) > 0} />;
+  return <AskBox hasDocuments={(count ?? 0) > 0} />;
 }

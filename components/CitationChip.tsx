@@ -7,30 +7,19 @@ import type { Citation } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// Renders answer text, turning [n] markers into citation chips.
-export function AnswerBody({ text }: { text: string }) {
-  const parts = text.split(/(\[\d+\])/g);
+// Inline [n] citation chip rendered within answer text.
+export function CitationChip({ n }: { n: number }) {
   return (
-    <p className="whitespace-pre-wrap text-xl leading-relaxed">
-      {parts.map((part, i) => {
-        const match = part.match(/^\[(\d+)\]$/);
-        if (match) {
-          return (
-            <a
-              key={i}
-              href={`#cite-${match[1]}`}
-              className="mx-0.5 inline-flex h-6 min-w-6 -translate-y-0.5 items-center justify-center rounded bg-primary/10 px-1.5 align-middle text-base font-bold text-primary"
-            >
-              {match[1]}
-            </a>
-          );
-        }
-        return <span key={i}>{part}</span>;
-      })}
-    </p>
+    <a
+      href={`#cite-${n}`}
+      className="mx-0.5 inline-flex h-6 min-w-6 -translate-y-0.5 items-center justify-center rounded bg-primary/10 px-1.5 align-middle text-base font-bold text-primary"
+    >
+      {n}
+    </a>
   );
 }
 
+// A single source card: document title + p./§ + the exact words on demand.
 export function CitationCard({ c }: { c: Citation }) {
   const [open, setOpen] = useState(false);
   const location = [
