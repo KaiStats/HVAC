@@ -1,0 +1,10 @@
+# Compliance Copilot — Cursor working agreement
+
+- Build ONLY the phase I name. Do not scaffold future phases.
+- Every DB query is scoped by org_id. Assume RLS; never bypass it with the service key on the client.
+- Every AI answer must carry citations or it does not ship.
+- UI follows the 5th-grader doctrine in PROJECT.md §2: one action per screen, plain language, 48px+ tap targets, mobile-first.
+- Stream AI responses. Never show a frozen spinner.
+- After finishing a phase, stop and list the acceptance criteria for me to test. Do not continue.
+- If a requirement is ambiguous, ask one sharp question rather than guessing.
+- TypeScript strict. No `any`. Small, named functions.
