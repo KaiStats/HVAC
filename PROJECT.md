@@ -309,6 +309,26 @@ Note: Supabase clients are split into `lib/supabase/*` (rather than a single
 (`next/headers`) and browser client code in one module. Retrieval lives in the
 `match_chunks` Postgres function (`db/schema.sql`) called from the ask route.
 
+## The pilot close (how we sell Phase 1)
+
+Lead with the manual problem. The close is a 10-minute live demo:
+
+1. Ask the client for their actual safety manual / SOP.
+2. Upload it live: "Watch this — it's reading your manual now."
+3. Hand them the phone: "Tap the mic. Ask it anything you'd normally dig
+   through that PDF for."
+4. It answers in seconds and shows the exact page — their document, their words.
+5. The line: "Your team will never search a 200-page PDF mid-job again. And
+   every answer points to the page, so you can defend it in an audit."
+
+Their own manual answering out loud, with a citation, is the thing we're
+selling. **The wedge must be flawless.** Win the client, then run the rest.
+
+> Latency note for the "answers in seconds" moment: streaming makes the answer
+> feel instant, but the Voyage rerank step runs before the first token. If
+> perceived latency ever hurts the demo, rerank can be skipped (fall back to
+> cosine top-4) — the code already degrades gracefully.
+
 ## Working agreement
 
 - Build only the current phase. After each phase, **stop** and let the product
