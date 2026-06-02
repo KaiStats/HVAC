@@ -15,6 +15,12 @@ import { AnswerCard, AnswerText } from "@/components/AnswerCard";
 
 type Phase = "idle" | "reading" | "streaming" | "done" | "error";
 
+// Wire protocol for the /api/ask NDJSON stream.
+type StreamEvent =
+  | { type: "delta"; text: string }
+  | ({ type: "done" } & AskAnswer)
+  | { type: "error"; message: string };
+
 const DEFAULT_EXAMPLES = [
   "What PPE do I need for confined space entry?",
   "How do I lock out a machine before maintenance?",
@@ -85,12 +91,16 @@ export function AskBox({
         buffer = lines.pop() ?? "";
         for (const raw of lines) {
           if (!raw.trim()) continue;
-          const event = JSON.parse(raw);
+          const event = JSON.parse(raw) as StreamEvent;
           if (event.type === "delta") {
             setPhase("streaming");
             setStreamText((prev) => prev + event.text);
           } else if (event.type === "done") {
-            setResult(event as AskAnswer);
+            setResult({
+              answer: event.answer,
+              citations: event.citations,
+              refused: event.refused,
+            });
             setPhase("done");
           } else if (event.type === "error") {
             throw new Error(event.message ?? "Something went wrong.");
