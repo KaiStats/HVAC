@@ -35,7 +35,7 @@ every time.**
 2. In **SQL Editor**, run, in order:
    - `db/schema.sql` — tables, `pgvector` index, functions, the new-user
      bootstrap trigger (each signup gets its own org), `match_chunks`, and the
-     private `documents` storage bucket.
+     private `manuals` storage bucket.
    - `db/policies.sql` — Row-Level Security on every table + storage policies.
 3. **Auth → URL Configuration:** set **Site URL** to your app origin (e.g.
    `http://localhost:3000`) and add `<origin>/auth/callback` to **Redirect
@@ -78,7 +78,7 @@ Other scripts: `npm run build`, `npm run start`, `npm run typecheck`,
 ## How it works
 
 - **Upload** (`/documents`) → drag-drop or pick a **PDF, Word (.docx), or text
-  (.txt)** file. It's stored under `documents/<org_id>/<doc_id>.<ext>`, text is
+  (.txt)** file. It's stored under `manuals/<org_id>/<doc_id>.<ext>`, text is
   extracted (PDFs keep exact page numbers), split into section/page-aware
   chunks, embedded with Voyage, and stored in `document_chunks` with `org_id`.
 - **Ask** (`/ask`) → the question is embedded, the top matching chunks **from

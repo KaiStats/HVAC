@@ -72,7 +72,7 @@ export async function POST(request: Request) {
   const admin = createAdminClient();
 
   const { error: uploadError } = await admin.storage
-    .from("documents")
+    .from("manuals")
     .upload(filePath, bytes, {
       contentType: CONTENT_TYPE[fileType],
       upsert: true,

@@ -74,23 +74,23 @@ create policy messages_insert on public.messages
   );
 
 -- Storage: objects live under "<org_id>/..." so we scope by the first folder.
-drop policy if exists "documents read own org" on storage.objects;
-create policy "documents read own org" on storage.objects
+drop policy if exists "manuals read own org" on storage.objects;
+create policy "manuals read own org" on storage.objects
   for select using (
-    bucket_id = 'documents'
+    bucket_id = 'manuals'
     and (storage.foldername(name))[1] = public.current_org_id()::text
   );
 
-drop policy if exists "documents insert own org" on storage.objects;
-create policy "documents insert own org" on storage.objects
+drop policy if exists "manuals insert own org" on storage.objects;
+create policy "manuals insert own org" on storage.objects
   for insert with check (
-    bucket_id = 'documents'
+    bucket_id = 'manuals'
     and (storage.foldername(name))[1] = public.current_org_id()::text
   );
 
-drop policy if exists "documents delete own org" on storage.objects;
-create policy "documents delete own org" on storage.objects
+drop policy if exists "manuals delete own org" on storage.objects;
+create policy "manuals delete own org" on storage.objects
   for delete using (
-    bucket_id = 'documents'
+    bucket_id = 'manuals'
     and (storage.foldername(name))[1] = public.current_org_id()::text
   );

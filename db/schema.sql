@@ -166,8 +166,8 @@ as $$
   limit match_count;
 $$;
 
--- Private storage bucket for uploaded documents.
+-- Private storage bucket for uploaded manuals.
 -- Object paths are "<org_id>/<document_id>.<ext>" so RLS can scope by folder.
 insert into storage.buckets (id, name, public)
-values ('documents', 'documents', false)
+values ('manuals', 'manuals', false)
 on conflict (id) do nothing;
