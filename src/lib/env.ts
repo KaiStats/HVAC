@@ -26,6 +26,7 @@ export const SERVER_ENV = {
     optional("ANTHROPIC_QA_MODEL", "claude-3-5-haiku-latest"),
   voyageApiKey: () => required("VOYAGE_API_KEY"),
   voyageEmbedModel: () => optional("VOYAGE_EMBED_MODEL", "voyage-3.5-lite"),
+  voyageRerankModel: () => optional("VOYAGE_RERANK_MODEL", "rerank-2.5-lite"),
 };
 
 export const EMBEDDING_DIMENSIONS = 1024;

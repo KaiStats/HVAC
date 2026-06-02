@@ -1,6 +1,8 @@
-import { getSessionContext } from "@/lib/auth";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { getSessionContext, type SessionContext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { embedQuery } from "@/lib/voyage";
+import { embedQuery, rerank } from "@/lib/voyage";
 import {
   REFUSAL_TEXT,
   SYSTEM_PROMPT,
@@ -9,13 +11,35 @@ import {
   getQaClient,
   getQaModel,
 } from "@/lib/anthropic";
-import type { RetrievedChunk } from "@/lib/types";
+import type { AskAnswer, RetrievedChunk } from "@/lib/types";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const MATCH_COUNT = 8;
+const MATCH_COUNT = 8; // pgvector cosine top-K
+const RERANK_TO = 4; // narrow to the best few before answering
 const MIN_SIMILARITY = 0.25;
+
+// Persist the turn (audit evidence). Never let a save failure break the stream.
+async function saveTurn(
+  supabase: SupabaseClient,
+  session: SessionContext,
+  question: string,
+  answer: AskAnswer,
+) {
+  try {
+    await supabase.from("messages").insert({
+      org_id: session.orgId,
+      user_id: session.userId,
+      question,
+      answer: answer.answer,
+      citations: answer.citations,
+      refused: answer.refused,
+    });
+  } catch {
+    // Non-fatal: the worker still gets their answer.
+  }
+}
 
 const encoder = new TextEncoder();
 function line(obj: unknown) {
@@ -55,21 +79,39 @@ export async function POST(request: Request) {
         });
         if (error) throw new Error(error.message);
 
-        const chunks = ((data ?? []) as RetrievedChunk[]).filter(
+        const candidates = ((data ?? []) as RetrievedChunk[]).filter(
           (c) => c.similarity >= MIN_SIMILARITY,
         );
 
-        if (chunks.length === 0) {
-          controller.enqueue(
-            line({
-              type: "done",
-              answer: REFUSAL_TEXT,
-              citations: [],
-              refused: true,
-            }),
-          );
+        if (candidates.length === 0) {
+          const refusal: AskAnswer = {
+            answer: REFUSAL_TEXT,
+            citations: [],
+            refused: true,
+          };
+          await saveTurn(supabase, session, question, refusal);
+          controller.enqueue(line({ type: "done", ...refusal }));
           controller.close();
           return;
+        }
+
+        // Narrow the top cosine hits to the best few with Voyage rerank;
+        // fall back to cosine order if rerank is unavailable.
+        let chunks = candidates.slice(0, RERANK_TO);
+        if (candidates.length > 1) {
+          try {
+            const order = await rerank(
+              question,
+              candidates.map((c) => c.content),
+              RERANK_TO,
+            );
+            const reranked = order
+              .map((i) => candidates[i])
+              .filter((c): c is RetrievedChunk => Boolean(c));
+            if (reranked.length > 0) chunks = reranked.slice(0, RERANK_TO);
+          } catch {
+            // keep cosine top-N
+          }
         }
 
         const anthropic = getQaClient();
@@ -97,6 +139,7 @@ export async function POST(request: Request) {
 
         // Enforce citations after the full answer is known.
         const finalAnswer = finalizeAnswer(full, chunks);
+        await saveTurn(supabase, session, question, finalAnswer);
         controller.enqueue(line({ type: "done", ...finalAnswer }));
         controller.close();
       } catch (err) {

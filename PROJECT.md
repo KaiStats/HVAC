@@ -129,8 +129,27 @@ dashboard, analytics, notifications, billing.
 - `documents(id, org_id, title, storage_path, status, page_count, uploaded_by, error, created_at)`
   - `status ∈ {processing, ready, error}`
 - `document_chunks(id, org_id, document_id, content, section, page, chunk_index, embedding vector(1024), created_at)`
+- `messages(id, org_id, user_id, question, answer, citations jsonb, refused, created_at)`
+  — every Q&A turn is saved with its citation JSON as audit evidence.
 
 Every table carries `org_id` and is protected by RLS keyed to the caller's org.
+
+## RAG pipeline (the engine)
+
+**Ingestion (on upload):** file lands in Storage → `documents` row set to
+`processing` → extract text preserving page numbers + detected section
+headings → **recursive splitter (~800 tokens/chunk, ~120 token overlap)** with
+`document_id`, `section`, `page`, `chunk_index` on every chunk → embed each
+chunk with Voyage → store the vector in `document_chunks.embedding` → set
+`ready` and tell the user "✅ Your manual is ready — ask it anything."
+
+**Query (on a question):** embed the question with Voyage → pgvector cosine
+search for the top 8 chunks scoped to `org_id` (`embedding <=> query_embedding`,
+enforced by RLS) → **Voyage rerank to the best 4** (Phase 1.5; graceful
+fallback to cosine order) → build the prompt (system rules + the 4 tagged
+sources + question) → **stream** Claude Haiku → parse citations and render them
+as tappable "Where this comes from → Manual X, p.42, §3.1" → save the turn to
+`messages` with the citation JSON.
 
 ## Retrieval & answer contract
 

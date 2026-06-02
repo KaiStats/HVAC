@@ -12,10 +12,12 @@ export function DocumentUploader() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
 
   async function upload(file: File) {
     setError(null);
+    setSuccess(null);
     setBusy(true);
     setFileName(file.name);
     try {
@@ -29,6 +31,8 @@ export function DocumentUploader() {
       if (!res.ok) throw new Error(json.error ?? "Upload failed.");
       if (json.status === "error") {
         setError(json.error ?? "We couldn't read that file.");
+      } else {
+        setSuccess("✅ Your manual is ready — ask it anything.");
       }
       router.refresh();
     } catch (err) {
@@ -83,6 +87,11 @@ export function DocumentUploader() {
         {error && (
           <p className="rounded-md bg-destructive/10 p-3 text-sm font-medium text-destructive">
             {error}
+          </p>
+        )}
+        {success && (
+          <p className="rounded-md bg-green-100 p-3 text-base font-semibold text-green-800">
+            {success}
           </p>
         )}
       </CardContent>

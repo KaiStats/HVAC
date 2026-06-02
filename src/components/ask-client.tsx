@@ -60,8 +60,8 @@ function AnswerBody({ text }: { text: string }) {
 function CitationCard({ c }: { c: Citation }) {
   const [open, setOpen] = useState(false);
   const location = [
-    c.section ? `Section: ${c.section}` : null,
-    c.page ? `Page ${c.page}` : null,
+    c.page ? `p.${c.page}` : null,
+    c.section ? `§${c.section}` : null,
   ]
     .filter(Boolean)
     .join(" · ");
