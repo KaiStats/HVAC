@@ -58,6 +58,25 @@ regulated SOPs and mandatory training exist.
    Security enforced. A worker at Company A can **never** see Company B's data.
 4. **Ship the wedge first.** Phase 1 only. Nothing else until it is demo-perfect.
 
+## The 5th-grader doctrine (hard UX rules)
+
+These are hard rules, not suggestions:
+
+1. **One job per screen.** The home screen is a single big "Ask anything about
+   your procedures" box. Everything else is one tap away, not on the front page.
+2. **No jargon.** Never say "RAG," "vector," "embedding," "module,"
+   "remediation." Say "Ask a question," "Practice," "Check your team's readiness."
+3. **Answer first, detail second.** Plain answer in 1–3 sentences at top, then a
+   "Where this comes from" expandable with the exact manual page.
+4. **Mobile-first, glove-friendly.** Minimum 48px tap targets. Big fonts. High
+   contrast. Works one-handed.
+5. **Voice in, voice out.** Tap the mic, ask out loud, hear the answer read back.
+   Web Speech API for input + speech synthesis for output (zero added cost).
+6. **Never a blank screen.** Empty states show tappable example questions
+   ("What PPE do I need for confined space entry?").
+7. **Speed is a feature.** Stream the answer token-by-token so it feels instant.
+   Show a "Reading your manuals…" state, never a frozen spinner.
+
 ## Phased plan
 
 ### Phase 1 — THE WEDGE (this phase)

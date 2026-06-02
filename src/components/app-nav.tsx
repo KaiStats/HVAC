@@ -7,7 +7,7 @@ import { MessageCircleQuestion, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const items = [
-  { href: "/ask", label: "Ask", icon: MessageCircleQuestion },
+  { href: "/", label: "Ask", icon: MessageCircleQuestion },
   { href: "/documents", label: "Documents", icon: FileText },
 ];
 
@@ -19,7 +19,8 @@ export function AppNav() {
     <nav className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 backdrop-blur">
       <div className="mx-auto flex max-w-[1100px] items-stretch">
         {items.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(`${href}/`);
+          const active =
+            href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
             <Link
               key={href}

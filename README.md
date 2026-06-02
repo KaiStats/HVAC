@@ -19,8 +19,12 @@ every time.**
 
 1. **Every answer cites its source** (document + section + page). No citation =
    not shown. Enforced in code (`src/lib/anthropic.ts`).
-2. **A 5th grader can use it.** One primary action per screen, plain language,
-   big tap targets, mobile-first.
+2. **A 5th grader can use it.** The home screen is one big "Ask anything" box;
+   plain language, ≥48px tap targets, mobile-first. The answer comes first
+   (1–3 sentences), with a collapsible "Where this comes from" showing the exact
+   manual page. Answers stream token-by-token ("Reading your manuals…", never a
+   frozen spinner). Empty states show tappable example questions. Voice in
+   (mic) and voice out (Listen).
 3. **Multi-tenant from line one.** Every row carries `org_id`; RLS enforced.
 
 ## Setup
