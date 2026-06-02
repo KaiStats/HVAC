@@ -4,11 +4,18 @@ import { getSessionContext } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { ingestDocument } from "@/lib/ingest";
+import { fileTypeFromName } from "@/lib/extract";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
 const MAX_BYTES = 25 * 1024 * 1024; // 25 MB
+
+const CONTENT_TYPE: Record<string, string> = {
+  pdf: "application/pdf",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  txt: "text/plain",
+};
 
 export async function POST(request: Request) {
   const session = await getSessionContext();
@@ -22,9 +29,11 @@ export async function POST(request: Request) {
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "No file provided." }, { status: 400 });
   }
-  if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+
+  const fileType = fileTypeFromName(file.name);
+  if (!fileType) {
     return NextResponse.json(
-      { error: "Only PDF files are supported right now." },
+      { error: "Please upload a PDF, Word (.docx), or text (.txt) file." },
       { status: 400 },
     );
   }
@@ -35,7 +44,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const title = file.name.replace(/\.pdf$/i, "");
+  const title = file.name.replace(/\.(pdf|docx|txt)$/i, "");
   const supabase = createClient();
 
   // Insert the document row through the user's session so RLS binds org_id.
@@ -44,7 +53,7 @@ export async function POST(request: Request) {
     .insert({
       org_id: session.orgId,
       title,
-      file_type: "pdf",
+      file_type: fileType,
       status: "processing",
       uploaded_by: session.userId,
     })
@@ -58,14 +67,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const filePath = `${session.orgId}/${doc.id}.pdf`;
+  const filePath = `${session.orgId}/${doc.id}.${fileType}`;
   const bytes = new Uint8Array(await file.arrayBuffer());
   const admin = createAdminClient();
 
   const { error: uploadError } = await admin.storage
     .from("documents")
     .upload(filePath, bytes, {
-      contentType: "application/pdf",
+      contentType: CONTENT_TYPE[fileType],
       upsert: true,
     });
 
@@ -87,6 +96,7 @@ export async function POST(request: Request) {
       orgId: session.orgId,
       documentId: doc.id,
       bytes,
+      fileType,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Ingestion failed.";

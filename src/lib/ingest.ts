@@ -1,5 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin";
-import { extractPdfPages } from "@/lib/pdf";
+import { extractDocument, type FileType } from "@/lib/extract";
 import { chunkPages } from "@/lib/chunk";
 import { embed } from "@/lib/voyage";
 
@@ -9,24 +9,26 @@ interface IngestArgs {
   orgId: string;
   documentId: string;
   bytes: Uint8Array;
+  fileType: FileType;
 }
 
-// Parse PDF -> chunk (with page/section) -> embed (Voyage) -> store chunks.
+// Extract text -> chunk (with page/section) -> embed (Voyage) -> store chunks.
 // Runs with the service role but always scopes writes to the document's org.
 export async function ingestDocument({
   orgId,
   documentId,
   bytes,
+  fileType,
 }: IngestArgs): Promise<void> {
   const admin = createAdminClient();
 
   try {
-    const pages = await extractPdfPages(bytes);
+    const { pages, pageCount } = await extractDocument(bytes, fileType);
     const chunks = chunkPages(pages);
 
     if (chunks.length === 0) {
       throw new Error(
-        "No readable text found. Scanned/image-only PDFs aren't supported yet.",
+        "No readable text found. Scanned/image-only files aren't supported yet.",
       );
     }
 
@@ -57,7 +59,7 @@ export async function ingestDocument({
 
     const { error: updateError } = await admin
       .from("documents")
-      .update({ status: "ready", page_count: pages.length, error: null })
+      .update({ status: "ready", page_count: pageCount, error: null })
       .eq("id", documentId);
     if (updateError) throw updateError;
   } catch (err) {

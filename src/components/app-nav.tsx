@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { MessageCircleQuestion, FileText } from "lucide-react";
+import { MessageCircleQuestion, FileText, History } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
 const items = [
   { href: "/", label: "Ask", icon: MessageCircleQuestion },
+  { href: "/history", label: "History", icon: History },
   { href: "/documents", label: "Documents", icon: FileText },
 ];
 

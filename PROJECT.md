@@ -77,7 +77,33 @@ These are hard rules, not suggestions:
 7. **Speed is a feature.** Stream the answer token-by-token so it feels instant.
    Show a "Reading your manuals…" state, never a frozen spinner.
 
-## Phased plan
+## Build phases (the F1 race plan)
+
+Each phase ends with acceptance criteria. Don't move on until they're green.
+
+- **Phase 0 — Foundation.** Next.js + Tailwind + shadcn scaffold; Supabase
+  project; env wired. Auth: **email magic link**. On signup, create
+  `organizations` + `profiles` row, assign `admin`. RLS on every table.
+  _Done when:_ a user can sign up, an org exists, and they land on an empty home
+  screen. **(Built.)**
+- **Phase 1 — The wedge: Manual-to-AI Q&A.** Drag-drop PDF/DOCX upload; ingest
+  pipeline; big single ask box + voice; streamed plain-language answers with
+  tappable citations (doc + page + section); conversation history per user.
+  _Done when:_ an admin uploads a real manual, a worker on a phone asks by voice
+  and gets a correct, cited answer in under 5 seconds. **(This phase.)**
+- **Phase 2 — Active practice.** Inspection Simulator + Incident Response
+  Trainer (Claude Sonnet); save sessions + scores + gaps. _Done when:_ a worker
+  runs a 5-question drill and gets a score + "you missed X (manual p.Y)".
+- **Phase 3 — Role-specific micro-learning.** Sonnet generates role-targeted
+  lesson cards; 2-minute daily refreshers personalized to weak areas.
+  _Done when:_ a `job_title='HVAC Tech'` worker sees only HVAC lessons.
+- **Phase 4 — Audit prep + knowledge-gap dashboard.** Manager dashboard
+  (completion, scores, top gaps) + Audit Prep Assistant. _Done when:_ a manager
+  opens one screen and sees exactly where the team is unprepared.
+- **Phase 5 — Versioned KB + update alerts.** Re-upload → new version; Claude
+  summarizes changes and flags affected training; optional SMS alerts.
+  _Done when:_ updating a manual notifies affected workers and re-flags stale
+  training.
 
 ### Phase 1 — THE WEDGE (this phase)
 
@@ -116,11 +142,6 @@ non-PDF formats.
 - [ ] Two orgs cannot see each other's documents, chunks, or answers
       (verified by RLS — a direct query as Org A returns zero Org B rows).
 - [ ] Works well on a phone screen (375px wide), large tap targets, plain words.
-
-### Phase 2+ (NOT NOW — for context only)
-
-Practice mode & simulations (Claude Sonnet), grading, manager audit-readiness
-dashboard, analytics, notifications, billing.
 
 ## Data model (canonical)
 

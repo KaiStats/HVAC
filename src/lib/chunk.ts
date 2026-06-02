@@ -1,9 +1,9 @@
-import type { PdfPage } from "@/lib/pdf";
+import type { ExtractedPage } from "@/lib/extract";
 
 export interface Chunk {
   content: string;
   section: string | null;
-  page: number;
+  page: number | null;
   chunk_index: number;
 }
 
@@ -103,12 +103,16 @@ function detectHeading(line: string): string | null {
 // Splits parsed pages into ~800-token chunks. Chunks never cross page
 // boundaries (so page numbers stay exact), and carry the current section
 // heading forward across pages. Every chunk knows document/section/page.
-export function chunkPages(pages: PdfPage[]): Chunk[] {
+export function chunkPages(pages: ExtractedPage[]): Chunk[] {
   const chunks: Chunk[] = [];
   let currentSection: string | null = null;
   let chunkIndex = 0;
 
-  const flushBlock = (text: string, section: string | null, page: number) => {
+  const flushBlock = (
+    text: string,
+    section: string | null,
+    page: number | null,
+  ) => {
     for (const piece of recursiveSplit(text)) {
       if (piece.length < MIN_CHUNK_CHARS) continue;
       chunks.push({

@@ -38,9 +38,10 @@ every time.**
    These create the schema, `pgvector` index, RLS policies, the new-user
    bootstrap trigger (each signup gets its own org), and the private
    `documents` storage bucket.
-3. **Auth → Providers → Email:** for the fastest demo, turn **off**
-   "Confirm email" so new accounts can sign in immediately. (Leave it on for
-   production and use the email confirmation flow.)
+3. **Auth → URL Configuration:** set **Site URL** to your app origin (e.g.
+   `http://localhost:3000`) and add `<origin>/auth/callback` to **Redirect
+   URLs**. Sign-in is a passwordless **email magic link**, so make sure the
+   Email provider is enabled (Supabase's built-in email works for the demo).
 
 ### 2. API keys
 
@@ -77,9 +78,10 @@ Other scripts: `npm run build`, `npm run start`, `npm run typecheck`,
 
 ## How it works
 
-- **Upload** (`/documents`) → PDF is stored under `documents/<org_id>/<doc_id>.pdf`,
-  text is extracted **page by page**, split into section/page-aware chunks,
-  embedded with Voyage, and stored in `document_chunks` with the org's `org_id`.
+- **Upload** (`/documents`) → drag-drop or pick a **PDF, Word (.docx), or text
+  (.txt)** file. It's stored under `documents/<org_id>/<doc_id>.<ext>`, text is
+  extracted (PDFs keep exact page numbers), split into section/page-aware
+  chunks, embedded with Voyage, and stored in `document_chunks` with `org_id`.
 - **Ask** (`/ask`) → the question is embedded, the top matching chunks **from
   your org only** are retrieved (RLS-enforced via `match_chunks`), and Claude
   Haiku answers using only those sources. Every claim carries a `[n]` citation

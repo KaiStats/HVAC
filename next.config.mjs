@@ -2,8 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
-    // unpdf / pdfjs work in the node runtime; keep them external on the server.
-    serverComponentsExternalPackages: ["unpdf"],
+    // unpdf / pdfjs / mammoth work in the node runtime; keep them external.
+    serverComponentsExternalPackages: ["unpdf", "mammoth"],
   },
 };
 

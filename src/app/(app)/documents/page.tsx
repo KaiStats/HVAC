@@ -72,7 +72,7 @@ export default async function DocumentsPage() {
                       ? doc.error
                       : doc.page_count
                         ? `${doc.page_count} pages`
-                        : "PDF"}
+                        : (doc.file_type ?? "file").toUpperCase()}
                   </p>
                 </div>
                 <StatusBadge status={doc.status} />

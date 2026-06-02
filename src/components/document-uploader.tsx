@@ -4,13 +4,17 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { UploadCloud, Loader2 } from "lucide-react";
 
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+
+const ACCEPT = ".pdf,.docx,.txt";
 
 export function DocumentUploader() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -44,8 +48,26 @@ export function DocumentUploader() {
     }
   }
 
+  function onDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) void upload(file);
+  }
+
   return (
-    <Card className="border-2 border-dashed">
+    <Card
+      className={cn(
+        "border-2 border-dashed transition-colors",
+        dragging && "border-primary bg-primary/5",
+      )}
+      onDragOver={(e) => {
+        e.preventDefault();
+        setDragging(true);
+      }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={onDrop}
+    >
       <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
         <div className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
           {busy ? (
@@ -56,19 +78,21 @@ export function DocumentUploader() {
         </div>
         <div>
           <p className="text-lg font-bold">
-            {busy ? `Reading "${fileName}"…` : "Upload a manual or SOP"}
+            {busy
+              ? `Processing "${fileName}"…`
+              : "Drag a file here, or tap to upload"}
           </p>
           <p className="text-muted-foreground">
             {busy
               ? "This can take a moment for big files."
-              : "PDF files only. Max 25 MB."}
+              : "PDF, Word (.docx), or text (.txt). Max 25 MB."}
           </p>
         </div>
 
         <input
           ref={inputRef}
           type="file"
-          accept="application/pdf,.pdf"
+          accept={ACCEPT}
           className="hidden"
           onChange={(e) => {
             const file = e.target.files?.[0];
@@ -81,7 +105,7 @@ export function DocumentUploader() {
           disabled={busy}
           onClick={() => inputRef.current?.click()}
         >
-          {busy ? "Working…" : "Choose PDF"}
+          {busy ? "Working…" : "Choose a file"}
         </Button>
 
         {error && (
