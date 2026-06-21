@@ -1,0 +1,2 @@
+# Local git worktrees used to check out feature branches for dev/testing
+.worktrees/
