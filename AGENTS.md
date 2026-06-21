@@ -17,13 +17,11 @@
 
 ### Secret / env mapping (non-obvious)
 
-- The only secret injected into this environment is the Anthropic key, but it is exposed under the malformed env var name **`1. CLAUDE_API_KEY`** (literal `1. ` prefix and a space — not a valid shell identifier). Read it with `printenv "1. CLAUDE_API_KEY"`.
-- All apps expect it as **`ANTHROPIC_API_KEY`**. The agent's `~/.bashrc` already maps the malformed secret to `ANTHROPIC_API_KEY` for new interactive shells, so apps (and the `@anthropic-ai/sdk`) generally pick it up from the environment automatically — no `.env.local` needed.
-- If a fresh VM ever lacks that mapping, re-create it or write the app's `.env.local` directly:
+- The Anthropic key is the only injected secret. It has been renamed in the Secrets UI to **`ANTHROPIC_API_KEY`** (the name the apps and `@anthropic-ai/sdk` expect), so on a fresh VM it should be available directly as `$ANTHROPIC_API_KEY` — no mapping or `.env.local` needed.
+- Caveat: the platform has previously injected this secret under a **malformed env var name with a `"N. "` numbering prefix** (e.g. `1. CLAUDE_API_KEY`), which is not a valid shell identifier and can't be read with normal `$VAR` expansion. To be safe against that, the agent's `~/.bashrc` normalizes things: if `ANTHROPIC_API_KEY` is unset, it discovers the key from `env` by matching any var name ending in `ANTHROPIC_API_KEY`/`CLAUDE_API_KEY` and exports it. So apps pick the key up from the environment automatically.
+- If you ever need to read a malformed-named var manually, use `printenv` with the exact name, e.g. `printenv "1. CLAUDE_API_KEY"`, or write the app's `.env.local`:
   ```bash
-  export ANTHROPIC_API_KEY="$(printenv "1. CLAUDE_API_KEY")"
-  # or:
-  printf 'ANTHROPIC_API_KEY=%s\n' "$(printenv "1. CLAUDE_API_KEY")" > .env.local
+  printf 'ANTHROPIC_API_KEY=%s\n' "${ANTHROPIC_API_KEY:-$(printenv '1. CLAUDE_API_KEY')}" > .env.local
   ```
 
 ### Running an app (general)
