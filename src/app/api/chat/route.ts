@@ -1,5 +1,5 @@
 import { streamText } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { anthropic } from "@ai-sdk/anthropic";
 import { SYSTEM_PROMPT } from "@/lib/compliance-data";
 
 export const maxDuration = 30;
@@ -13,7 +13,7 @@ export async function POST(req: Request) {
 
   try {
     const result = await streamText({
-      model: openai("gpt-4o-mini"),
+      model: anthropic("claude-sonnet-4-5"),
       system: SYSTEM_PROMPT + industryContext,
       messages,
       temperature: 0.3,
@@ -26,9 +26,10 @@ export async function POST(req: Request) {
     if (
       error instanceof Error &&
       (error.message.includes("API key") ||
-        error.message.includes("OPENAI_API_KEY") ||
+        error.message.includes("ANTHROPIC_API_KEY") ||
         error.message.includes("401") ||
-        error.message.includes("authentication"))
+        error.message.includes("authentication") ||
+        error.message.includes("x-api-key"))
     ) {
       return getDemoResponse(messages, industry);
     }

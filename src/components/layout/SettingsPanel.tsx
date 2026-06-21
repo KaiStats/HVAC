@@ -36,14 +36,14 @@ export function SettingsPanel() {
           <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-4">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">
-                OpenAI API Key
+                Anthropic API Key
               </label>
               <div className="flex gap-2">
                 <input
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="sk-..."
+                  placeholder="sk-ant-..."
                   className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-transparent"
                 />
                 <Button
@@ -63,10 +63,10 @@ export function SettingsPanel() {
                 </Button>
               </div>
               <p className="text-xs text-gray-400 mt-1.5">
-                Or set <code className="bg-gray-100 px-1 rounded">OPENAI_API_KEY</code> in your{" "}
+                Or set <code className="bg-gray-100 px-1 rounded">ANTHROPIC_API_KEY</code> in your{" "}
                 <code className="bg-gray-100 px-1 rounded">.env.local</code> file.{" "}
                 <a
-                  href="https://platform.openai.com/api-keys"
+                  href="https://console.anthropic.com/settings/keys"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-brand-600 hover:underline inline-flex items-center gap-0.5"
@@ -80,9 +80,9 @@ export function SettingsPanel() {
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1.5">AI Model</label>
               <select className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-brand-400 bg-white">
-                <option value="gpt-4o-mini">GPT-4o Mini (Fast, Cost-effective)</option>
-                <option value="gpt-4o">GPT-4o (Most Capable)</option>
-                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="claude-sonnet-4-5">Claude Sonnet 4.5 (Recommended)</option>
+                <option value="claude-opus-4-5">Claude Opus 4.5 (Most Capable)</option>
+                <option value="claude-haiku-3-5">Claude Haiku 3.5 (Fast)</option>
               </select>
             </div>
           </div>
