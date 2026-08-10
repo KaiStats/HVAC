@@ -7,10 +7,25 @@ const geist = Geist({
   subsets: ["latin"],
 });
 
+const TITLE = "Desert Air HVAC & Plumbing — Las Vegas Valley 24/7 AC & Plumbing";
+const DESCRIPTION =
+  "Emergency AC repair, heating service, and plumbing across Henderson and Las Vegas. Licensed & insured, 4.9 stars from 200+ reviews, same-day service. Call (702) 555-0147.";
+
 export const metadata: Metadata = {
-  title: "Desert Air HVAC — Henderson's 24/7 AC & Plumbing",
-  description:
-    "Emergency AC repair, heating service, and plumbing in Henderson, NV. Licensed & bonded, BBB A+, serving the valley since 2009. Call (702) 555-1234.",
+  title: TITLE,
+  description: DESCRIPTION,
+  openGraph: {
+    title: TITLE,
+    description: DESCRIPTION,
+    type: "website",
+    locale: "en_US",
+    siteName: "Desert Air HVAC & Plumbing",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: TITLE,
+    description: DESCRIPTION,
+  },
 };
 
 export default function RootLayout({
