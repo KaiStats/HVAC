@@ -48,9 +48,11 @@ export default function ChatWidget() {
     setTyping(true);
 
     try {
-      // Convert current messages to Anthropic format
+      // Convert current messages to Anthropic format. The opening greeting is
+      // rendered client-side only — it must never be sent, because the API
+      // requires the first message in the array to be from the user.
       const anthropicMessages = messages
-        .filter((m) => m.id !== 1 || messages.length === 1) // Skip initial if more messages exist
+        .filter((m) => m.id !== INITIAL_MESSAGE.id)
         .map((m) => ({
           role: m.from === "user" ? "user" : "assistant",
           content: m.text,
